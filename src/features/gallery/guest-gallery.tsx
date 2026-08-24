@@ -1,0 +1,69 @@
+"use client";
+
+import { useState } from "react";
+import { Download, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export type GalleryPhoto = {
+  id: string;
+  thumbnailUrl: string;
+  processedUrl: string;
+  capturedBy: string;
+  capturedAt: string | Date;
+  presetName: string | null;
+  width: number | null;
+  height: number | null;
+  allowDownload: boolean;
+};
+
+export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
+  const [selected, setSelected] = useState<GalleryPhoto | null>(null);
+
+  return (
+    <>
+      <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">
+        {photos.map((photo) => (
+          <button
+            key={photo.id}
+            className="mb-3 block w-full overflow-hidden rounded-lg bg-stone-100 text-left shadow-sm transition hover:opacity-90"
+            onClick={() => setSelected(photo)}
+          >
+            <img src={photo.thumbnailUrl} alt={`Captured by ${photo.capturedBy}`} className="h-auto w-full object-cover" loading="lazy" />
+          </button>
+        ))}
+      </div>
+
+      {selected ? (
+        <div className="fixed inset-0 z-50 grid bg-black/88 p-4 text-white backdrop-blur-sm md:place-items-center">
+          <div className="relative mx-auto flex h-full w-full max-w-5xl flex-col md:h-auto">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Captured by {selected.capturedBy}</p>
+                <p className="text-sm text-white/60">
+                  {new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(selected.capturedAt))}
+                  {selected.presetName ? ` · ${selected.presetName}` : ""}
+                </p>
+              </div>
+              <Button variant="secondary" size="icon" onClick={() => setSelected(null)} aria-label="Close lightbox">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="grid flex-1 place-items-center overflow-hidden rounded-lg bg-black">
+              <img src={selected.processedUrl} alt={`Captured by ${selected.capturedBy}`} className="max-h-[76dvh] w-auto max-w-full object-contain" />
+            </div>
+            {selected.allowDownload ? (
+              <a
+                href={selected.processedUrl}
+                download
+                className="mt-3 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-stone-950"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </a>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}

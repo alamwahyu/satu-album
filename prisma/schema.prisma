@@ -1,0 +1,273 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  HOST
+}
+
+enum EventType {
+  WEDDING
+  ENGAGEMENT
+  BIRTHDAY
+  CORPORATE
+  PARTY
+  REUNION
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  UPCOMING
+  ACTIVE
+  REVEALED
+  COMPLETED
+  ARCHIVED
+  DISABLED
+}
+
+enum RevealMode {
+  LIVE
+  AFTER_EVENT
+  CUSTOM
+  MANUAL
+}
+
+enum PhotoStatus {
+  ACTIVE
+  HIDDEN
+  DELETED
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum EventPrivacy {
+  PRIVATE
+  PUBLIC
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         UserRole @default(HOST)
+  disabledAt   DateTime?
+
+  events       Event[]
+  transactions Transaction[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  ownerId     String
+  planId      String?
+  presetId    String?
+
+  name        String
+  slug        String      @unique
+  guestToken  String      @unique
+  type        EventType
+
+  eventDate   DateTime
+  startAt     DateTime?
+  endAt       DateTime?
+  timezone    String      @default("Asia/Jakarta")
+
+  venueName   String?
+  coverObjectKey String?
+  description String?
+
+  guestLimit  Int?
+  photoLimit  Int         @default(24)
+  revealMode  RevealMode  @default(AFTER_EVENT)
+  revealAt    DateTime?
+  status      EventStatus @default(DRAFT)
+  privacy     EventPrivacy @default(PRIVATE)
+  passwordHash String?
+
+  allowGuestDownload Boolean @default(false)
+  allowGuestGallery  Boolean @default(true)
+  requireGuestName   Boolean @default(true)
+  qrTemplate         String  @default("Minimal")
+
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  plan        Plan?       @relation(fields: [planId], references: [id])
+  preset      FilmPreset? @relation(fields: [presetId], references: [id])
+  setting     EventSetting?
+  guests      Guest[]
+  sessions    GuestSession[]
+  photos      Photo[]
+  transactions Transaction[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  disabledAt  DateTime?
+
+  @@index([ownerId])
+  @@index([slug])
+  @@index([guestToken])
+  @@index([status])
+}
+
+model Guest {
+  id        String @id @default(cuid())
+  eventId   String
+  name      String
+  token     String @unique
+  deviceId  String
+  photoCount Int @default(0)
+  joinedAt  DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  event     Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sessions  GuestSession[]
+  photos    Photo[]
+
+  @@unique([eventId, deviceId])
+  @@index([eventId])
+}
+
+model GuestSession {
+  id        String @id @default(cuid())
+  eventId   String
+  guestId   String
+  token     String @unique
+  deviceId  String
+  userAgent String?
+  ipHash    String?
+  photoCount Int @default(0)
+  joinedAt DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([guestId])
+}
+
+model Photo {
+  id        String @id @default(cuid())
+  eventId   String
+  guestId   String
+
+  originalObjectKey  String?
+  processedObjectKey String
+  thumbnailObjectKey String?
+  presetId String?
+
+  width     Int?
+  height    Int?
+  fileSize  Int?
+  mimeType  String?
+  deviceType String?
+  browser    String?
+
+  status    PhotoStatus @default(ACTIVE)
+  isFavorite Boolean @default(false)
+
+  event     Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest     Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  preset    FilmPreset? @relation(fields: [presetId], references: [id])
+
+  capturedAt DateTime @default(now())
+  uploadedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([eventId])
+  @@index([guestId])
+  @@index([status])
+  @@index([isFavorite])
+}
+
+model FilmPreset {
+  id          String @id @default(cuid())
+  name        String @unique
+  slug        String @unique
+  description String?
+  config      Json
+  isSystem    Boolean @default(true)
+  isActive    Boolean @default(true)
+
+  events Event[]
+  photos Photo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventSetting {
+  id        String @id @default(cuid())
+  eventId   String @unique
+  grainIntensity Float @default(0.08)
+  grainSize      Int   @default(1)
+  maxImageWidth  Int   @default(2400)
+  jpegQuality    Int   @default(84)
+  allowZipByGuest Boolean @default(true)
+  expiredJoinDisabled Boolean @default(false)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Plan {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String?
+  priceCents  Int @default(0)
+  currency    String @default("IDR")
+  guestLimit  Int?
+  photoLimitPerGuest Int?
+  storageLimitMb Int?
+  isActive    Boolean @default(true)
+
+  events Event[]
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id              String @id @default(cuid())
+  transactionId   String @unique
+  userId          String
+  eventId         String?
+  planId          String
+  amountCents     Int
+  currency        String @default("IDR")
+  status          TransactionStatus @default(PENDING)
+  paymentProvider String?
+  providerRef     String?
+  paidAt          DateTime?
+
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id])
+  plan  Plan @relation(fields: [planId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
