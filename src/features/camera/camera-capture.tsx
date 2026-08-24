@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ImageUp, Images, Loader2, RotateCcw, Zap } from "lucide-react";
+import { Camera, ImageUp, Images, Loader2, RectangleHorizontal, RectangleVertical, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CameraCaptureProps = {
@@ -14,6 +14,7 @@ type CameraCaptureProps = {
 };
 
 type UploadState = "idle" | "starting" | "processing" | "uploading" | "saved" | "failed";
+type CameraOrientation = "portrait" | "landscape";
 
 export function CameraCapture({ slug, eventName, guestName, initialShotsRemaining, photoLimit }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -26,6 +27,7 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraRequested, setCameraRequested] = useState(false);
+  const [orientation, setOrientation] = useState<CameraOrientation>("portrait");
 
   useEffect(() => {
     if (!cameraRequested) return;
@@ -38,7 +40,11 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1920 }, height: { ideal: 2560 } },
+          video: {
+            facingMode,
+            width: { ideal: orientation === "portrait" ? 1920 : 2560 },
+            height: { ideal: orientation === "portrait" ? 2560 : 1920 }
+          },
           audio: false
         });
         if (cancelled) {
@@ -65,7 +71,7 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
       cancelled = true;
       stopStream();
     };
-  }, [cameraRequested, facingMode]);
+  }, [cameraRequested, facingMode, orientation]);
 
   function stopStream() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -76,13 +82,18 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
     setCameraRequested(true);
   }
 
+  function changeOrientation(nextOrientation: CameraOrientation) {
+    setOrientation(nextOrientation);
+    setError("");
+  }
+
   async function capture() {
     if (!videoRef.current || shotsRemaining <= 0 || status === "processing" || status === "uploading") return;
     setStatus("processing");
     setError("");
 
     try {
-      const blob = await videoToJpeg(videoRef.current);
+      const blob = await videoToJpeg(videoRef.current, orientation);
       await uploadBlob(blob);
     } catch {
       setStatus("failed");
@@ -103,7 +114,7 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
     setError("");
 
     try {
-      const blob = await fileToJpeg(file);
+      const blob = await fileToJpeg(file, orientation);
       await uploadBlob(blob);
     } catch {
       setStatus("failed");
@@ -158,36 +169,61 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
           </p>
         </div>
 
-        <div className="relative flex-1 overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-2xl">
-          <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
-          {!cameraReady ? (
-            <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#1f1b16,#74604a_45%,#d4af7a)] px-8 text-center">
-              <div>
-                <Camera className="mx-auto h-12 w-12 text-white/75" />
-                <p className="mt-5 text-lg font-semibold">{cameraRequested ? "Camera unavailable" : "Ready to take photos"}</p>
-                <p className="mt-2 text-sm leading-6 text-white/65">
-                  {cameraRequested ? "Allow camera permission or upload an image from this device." : "Tap Start Camera and allow permission when your browser asks."}
-                </p>
-                {!cameraRequested ? (
-                  <Button className="mt-5" variant="secondary" onClick={requestCamera}>
-                    <Camera className="h-4 w-4" />
-                    Start Camera
-                  </Button>
-                ) : null}
+        <div className="mb-3 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/10 p-1">
+          <button
+            type="button"
+            className={`flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
+              orientation === "portrait" ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
+            }`}
+            onClick={() => changeOrientation("portrait")}
+          >
+            <RectangleVertical className="h-4 w-4" />
+            Portrait
+          </button>
+          <button
+            type="button"
+            className={`flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
+              orientation === "landscape" ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
+            }`}
+            onClick={() => changeOrientation("landscape")}
+          >
+            <RectangleHorizontal className="h-4 w-4" />
+            Landscape
+          </button>
+        </div>
+
+        <div className="grid flex-1 place-items-center overflow-hidden rounded-[2rem] border border-white/10 bg-black p-2 shadow-2xl">
+          <div className={`relative overflow-hidden rounded-[1.5rem] bg-black ${orientation === "portrait" ? "aspect-[3/4] h-full max-h-full max-w-full" : "aspect-[4/3] w-full max-h-full"}`}>
+            <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
+            {!cameraReady ? (
+              <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#1f1b16,#74604a_45%,#d4af7a)] px-8 text-center">
+                <div>
+                  <Camera className="mx-auto h-12 w-12 text-white/75" />
+                  <p className="mt-5 text-lg font-semibold">{cameraRequested ? "Camera unavailable" : "Ready to take photos"}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/65">
+                    {cameraRequested ? "Allow camera permission or upload an image from this device." : "Tap Start Camera and allow permission when your browser asks."}
+                  </p>
+                  {!cameraRequested ? (
+                    <Button className="mt-5" variant="secondary" onClick={requestCamera}>
+                      <Camera className="h-4 w-4" />
+                      Start Camera
+                    </Button>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ) : null}
-          {lastImageUrl ? (
-            <img src={lastImageUrl} alt="Last saved photo" className="absolute bottom-4 left-4 h-16 w-16 rounded-xl border border-white/20 object-cover shadow-lg" />
-          ) : null}
-          {busy ? (
-            <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-sm">
-              <div className="rounded-2xl bg-white px-5 py-4 text-center text-stone-950 shadow-xl">
-                <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                <p className="mt-2 text-sm font-semibold">{status === "processing" ? "Processing photo..." : status === "uploading" ? "Uploading..." : "Starting camera..."}</p>
+            ) : null}
+            {lastImageUrl ? (
+              <img src={lastImageUrl} alt="Last saved photo" className="absolute bottom-4 left-4 h-16 w-16 rounded-xl border border-white/20 object-cover shadow-lg" />
+            ) : null}
+            {busy ? (
+              <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-sm">
+                <div className="rounded-2xl bg-white px-5 py-4 text-center text-stone-950 shadow-xl">
+                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  <p className="mt-2 text-sm font-semibold">{status === "processing" ? "Processing photo..." : status === "uploading" ? "Uploading..." : "Starting camera..."}</p>
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
         <footer className="grid gap-4 py-5">
@@ -231,27 +267,42 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
   );
 }
 
-async function videoToJpeg(video: HTMLVideoElement) {
+async function videoToJpeg(video: HTMLVideoElement, orientation: CameraOrientation) {
   const canvas = document.createElement("canvas");
   const width = video.videoWidth;
   const height = video.videoHeight;
-  return drawToJpeg(video, canvas, width, height);
+  return drawToJpeg(video, canvas, width, height, orientation);
 }
 
-async function fileToJpeg(file: File) {
+async function fileToJpeg(file: File, orientation: CameraOrientation) {
   const bitmap = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
-  return drawToJpeg(bitmap, canvas, bitmap.width, bitmap.height);
+  return drawToJpeg(bitmap, canvas, bitmap.width, bitmap.height, orientation);
 }
 
-function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, sourceWidth: number, sourceHeight: number) {
-  const maxWidth = 2400;
-  const scale = Math.min(1, maxWidth / sourceWidth);
-  canvas.width = Math.round(sourceWidth * scale);
-  canvas.height = Math.round(sourceHeight * scale);
+function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, sourceWidth: number, sourceHeight: number, orientation: CameraOrientation) {
+  const targetRatio = orientation === "portrait" ? 3 / 4 : 4 / 3;
+  const sourceRatio = sourceWidth / sourceHeight;
+  let cropX = 0;
+  let cropY = 0;
+  let cropWidth = sourceWidth;
+  let cropHeight = sourceHeight;
+
+  if (sourceRatio > targetRatio) {
+    cropWidth = sourceHeight * targetRatio;
+    cropX = (sourceWidth - cropWidth) / 2;
+  } else {
+    cropHeight = sourceWidth / targetRatio;
+    cropY = (sourceHeight - cropHeight) / 2;
+  }
+
+  const maxLongEdge = 2400;
+  const scale = Math.min(1, maxLongEdge / Math.max(cropWidth, cropHeight));
+  canvas.width = Math.round(cropWidth * scale);
+  canvas.height = Math.round(cropHeight * scale);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas is unavailable.");
-  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  context.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
