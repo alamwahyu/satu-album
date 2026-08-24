@@ -2,12 +2,13 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ImageUp, Images, Loader2, RectangleHorizontal, RectangleVertical, RotateCcw, Zap } from "lucide-react";
+import { Camera, ImageUp, Images, Loader2, Palette, RectangleHorizontal, RectangleVertical, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CameraCaptureProps = {
   slug: string;
   eventName: string;
+  eventDate: string;
   guestName: string;
   initialShotsRemaining: number;
   photoLimit: number;
@@ -15,8 +16,16 @@ type CameraCaptureProps = {
 
 type UploadState = "idle" | "starting" | "processing" | "uploading" | "saved" | "failed";
 type CameraOrientation = "portrait" | "landscape";
+type CameraFrame = "none" | "minimal" | "classic" | "dark";
 
-export function CameraCapture({ slug, eventName, guestName, initialShotsRemaining, photoLimit }: CameraCaptureProps) {
+const frameOptions: { value: CameraFrame; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "minimal", label: "Minimal" },
+  { value: "classic", label: "Classic" },
+  { value: "dark", label: "Dark" }
+];
+
+export function CameraCapture({ slug, eventName, eventDate, guestName, initialShotsRemaining, photoLimit }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -28,6 +37,8 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraRequested, setCameraRequested] = useState(false);
   const [orientation, setOrientation] = useState<CameraOrientation>("portrait");
+  const [frame, setFrame] = useState<CameraFrame>("classic");
+  const eventDateLabel = formatEventDate(eventDate);
 
   useEffect(() => {
     if (!cameraRequested) return;
@@ -93,7 +104,7 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
     setError("");
 
     try {
-      const blob = await videoToJpeg(videoRef.current, orientation);
+      const blob = await videoToJpeg(videoRef.current, { orientation, frame, eventName, eventDateLabel });
       await uploadBlob(blob);
     } catch {
       setStatus("failed");
@@ -114,7 +125,7 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
     setError("");
 
     try {
-      const blob = await fileToJpeg(file, orientation);
+      const blob = await fileToJpeg(file, { orientation, frame, eventName, eventDateLabel });
       await uploadBlob(blob);
     } catch {
       setStatus("failed");
@@ -192,9 +203,31 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
           </button>
         </div>
 
+        <div className="mb-3 rounded-2xl border border-white/10 bg-white/10 p-1">
+          <div className="mb-1 flex items-center gap-2 px-2 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
+            <Palette className="h-3.5 w-3.5" />
+            Frame
+          </div>
+          <div className="grid grid-cols-4 gap-1">
+            {frameOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`h-9 rounded-xl text-xs font-semibold transition ${
+                  frame === option.value ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
+                }`}
+                onClick={() => setFrame(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid flex-1 place-items-center overflow-hidden rounded-[2rem] border border-white/10 bg-black p-2 shadow-2xl">
           <div className={`relative overflow-hidden rounded-[1.5rem] bg-black ${orientation === "portrait" ? "aspect-[3/4] h-full max-h-full max-w-full" : "aspect-[4/3] w-full max-h-full"}`}>
             <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
+            <FrameOverlay frame={frame} eventName={eventName} eventDateLabel={eventDateLabel} />
             {!cameraReady ? (
               <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#1f1b16,#74604a_45%,#d4af7a)] px-8 text-center">
                 <div>
@@ -267,21 +300,63 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
   );
 }
 
-async function videoToJpeg(video: HTMLVideoElement, orientation: CameraOrientation) {
+type CaptureRenderOptions = {
+  orientation: CameraOrientation;
+  frame: CameraFrame;
+  eventName: string;
+  eventDateLabel: string;
+};
+
+function FrameOverlay({ frame, eventName, eventDateLabel }: { frame: CameraFrame; eventName: string; eventDateLabel: string }) {
+  if (frame === "none") return null;
+
+  if (frame === "classic") {
+    return (
+      <div className="pointer-events-none absolute inset-0 flex flex-col justify-between border-[10px] border-[#f6efe3] text-center text-stone-950">
+        <div className="bg-[#f6efe3] px-3 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-[0.22em]">{eventDateLabel}</div>
+        <div className="bg-[#f6efe3] px-4 pb-4 pt-3">
+          <p className="truncate font-serif text-lg font-semibold">{eventName}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (frame === "dark") {
+    return (
+      <div className="pointer-events-none absolute inset-0 border-[8px] border-black/80">
+        <div className="absolute inset-x-0 bottom-0 bg-black/72 px-4 py-4 text-center">
+          <p className="truncate text-sm font-semibold text-white">{eventName}</p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#d8b16c]">{eventDateLabel}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pointer-events-none absolute inset-4 border border-white/75">
+      <div className="absolute inset-x-3 bottom-3 text-center text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+        <p className="truncate text-sm font-semibold">{eventName}</p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em]">{eventDateLabel}</p>
+      </div>
+    </div>
+  );
+}
+
+async function videoToJpeg(video: HTMLVideoElement, options: CaptureRenderOptions) {
   const canvas = document.createElement("canvas");
   const width = video.videoWidth;
   const height = video.videoHeight;
-  return drawToJpeg(video, canvas, width, height, orientation);
+  return drawToJpeg(video, canvas, width, height, options);
 }
 
-async function fileToJpeg(file: File, orientation: CameraOrientation) {
+async function fileToJpeg(file: File, options: CaptureRenderOptions) {
   const bitmap = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
-  return drawToJpeg(bitmap, canvas, bitmap.width, bitmap.height, orientation);
+  return drawToJpeg(bitmap, canvas, bitmap.width, bitmap.height, options);
 }
 
-function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, sourceWidth: number, sourceHeight: number, orientation: CameraOrientation) {
-  const targetRatio = orientation === "portrait" ? 3 / 4 : 4 / 3;
+function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, sourceWidth: number, sourceHeight: number, options: CaptureRenderOptions) {
+  const targetRatio = options.orientation === "portrait" ? 3 / 4 : 4 / 3;
   const sourceRatio = sourceWidth / sourceHeight;
   let cropX = 0;
   let cropY = 0;
@@ -303,6 +378,7 @@ function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, source
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas is unavailable.");
   context.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+  drawFrame(context, canvas.width, canvas.height, options);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
@@ -314,4 +390,90 @@ function drawToJpeg(source: CanvasImageSource, canvas: HTMLCanvasElement, source
       0.86
     );
   });
+}
+
+function drawFrame(context: CanvasRenderingContext2D, width: number, height: number, options: CaptureRenderOptions) {
+  if (options.frame === "none") return;
+
+  const shortEdge = Math.min(width, height);
+  const padding = Math.round(shortEdge * 0.045);
+  const titleSize = Math.max(28, Math.round(width * 0.045));
+  const dateSize = Math.max(18, Math.round(width * 0.024));
+  const title = options.eventName;
+  const date = options.eventDateLabel.toUpperCase();
+
+  context.save();
+
+  if (options.frame === "classic") {
+    const border = Math.round(shortEdge * 0.045);
+    const topBand = Math.round(height * 0.085);
+    const bottomBand = Math.round(height * 0.13);
+    context.fillStyle = "#f6efe3";
+    context.fillRect(0, 0, width, border + topBand);
+    context.fillRect(0, height - border - bottomBand, width, border + bottomBand);
+    context.fillRect(0, 0, border, height);
+    context.fillRect(width - border, 0, border, height);
+    context.fillStyle = "#1c1917";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.font = `700 ${dateSize}px sans-serif`;
+    drawFittedText(context, date, width / 2, border + topBand / 2, width - border * 3);
+    context.font = `700 ${titleSize}px Georgia, serif`;
+    drawFittedText(context, title, width / 2, height - border - bottomBand / 2, width - border * 3);
+  } else if (options.frame === "dark") {
+    const border = Math.round(shortEdge * 0.04);
+    const bottomBand = Math.round(height * 0.15);
+    context.fillStyle = "rgba(0, 0, 0, 0.82)";
+    context.fillRect(0, 0, width, border);
+    context.fillRect(0, height - border - bottomBand, width, border + bottomBand);
+    context.fillRect(0, 0, border, height);
+    context.fillRect(width - border, 0, border, height);
+    context.strokeStyle = "#d8b16c";
+    context.lineWidth = Math.max(2, Math.round(shortEdge * 0.006));
+    context.strokeRect(border * 1.5, border * 1.5, width - border * 3, height - border * 3);
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#ffffff";
+    context.font = `700 ${titleSize}px sans-serif`;
+    drawFittedText(context, title, width / 2, height - border - bottomBand * 0.58, width - border * 4);
+    context.fillStyle = "#d8b16c";
+    context.font = `700 ${dateSize}px sans-serif`;
+    drawFittedText(context, date, width / 2, height - border - bottomBand * 0.28, width - border * 4);
+  } else {
+    const border = Math.max(3, Math.round(shortEdge * 0.006));
+    context.strokeStyle = "rgba(255, 255, 255, 0.88)";
+    context.lineWidth = border;
+    context.strokeRect(padding, padding, width - padding * 2, height - padding * 2);
+    const gradient = context.createLinearGradient(0, height * 0.68, 0, height);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0.72)");
+    context.fillStyle = gradient;
+    context.fillRect(0, height * 0.68, width, height * 0.32);
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#ffffff";
+    context.font = `700 ${titleSize}px sans-serif`;
+    drawFittedText(context, title, width / 2, height - padding * 2.4, width - padding * 4);
+    context.font = `700 ${dateSize}px sans-serif`;
+    drawFittedText(context, date, width / 2, height - padding * 1.25, width - padding * 4);
+  }
+
+  context.restore();
+}
+
+function drawFittedText(context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
+  if (context.measureText(text).width <= maxWidth) {
+    context.fillText(text, x, y);
+    return;
+  }
+
+  let clipped = text;
+  while (clipped.length > 1 && context.measureText(`${clipped}...`).width > maxWidth) {
+    clipped = clipped.slice(0, -1);
+  }
+  context.fillText(`${clipped}...`, x, y);
+}
+
+function formatEventDate(value: string) {
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value));
 }

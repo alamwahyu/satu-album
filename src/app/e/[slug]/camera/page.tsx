@@ -24,6 +24,7 @@ export default async function GuestCameraPage({ params }: PageProps) {
     <CameraCapture
       slug={event.slug}
       eventName={event.name}
+      eventDate={event.eventDate.toISOString()}
       guestName={session.guest.name}
       initialShotsRemaining={shotsRemaining}
       photoLimit={event.photoLimit}
