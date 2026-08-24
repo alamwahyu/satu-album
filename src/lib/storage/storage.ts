@@ -47,17 +47,26 @@ class LocalStorageProvider implements StorageProvider {
   private root = process.env.LOCAL_STORAGE_ROOT ?? "./uploads";
   private publicUrl = process.env.LOCAL_STORAGE_PUBLIC_URL ?? "/uploads";
 
+  private resolveRoot() {
+    return path.isAbsolute(this.root) ? path.resolve(this.root) : path.resolve(process.cwd(), this.root);
+  }
+
+  private resolveKey(key: string) {
+    const root = this.resolveRoot();
+    const filePath = path.resolve(root, key);
+    if (!filePath.startsWith(`${root}${path.sep}`) && filePath !== root) throw new Error("Invalid storage key.");
+    return filePath;
+  }
+
   async put(input: StoragePutInput) {
-    const filePath = path.join(process.cwd(), this.root, input.key);
+    const filePath = this.resolveKey(input.key);
     await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(filePath, input.body);
     return { key: input.key, url: this.getPublicUrl(input.key) };
   }
 
   async get(key: string) {
-    const root = path.resolve(process.cwd(), this.root);
-    const filePath = path.resolve(root, key);
-    if (!filePath.startsWith(root)) throw new Error("Invalid storage key.");
+    const filePath = this.resolveKey(key);
     return readFile(filePath);
   }
 
