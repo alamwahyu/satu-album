@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { getGuestSession } from "@/features/guests/session";
 import { imageProcessor } from "@/lib/image/processor";
-import { storageProvider } from "@/lib/storage/storage";
+import { storageProvider, validateProductionStorageConfig } from "@/lib/storage/storage";
 import type { FilmPresetConfig } from "@/features/presets/preset-config";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -47,6 +47,11 @@ export async function uploadGuestPhoto(slug: string, formData: FormData): Promis
 
   if (file.size > maxUploadBytes) {
     return { ok: false, status: 413, code: "IMAGE_TOO_LARGE", message: "Image must be 10 MB or smaller." };
+  }
+
+  const storageConfig = validateProductionStorageConfig();
+  if (!storageConfig.ok) {
+    return { ok: false, status: 500, code: "STORAGE_NOT_CONFIGURED", message: storageConfig.message };
   }
 
   const photoId = `photo_${randomBytes(12).toString("hex")}`;

@@ -25,8 +25,10 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
   const [error, setError] = useState("");
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraRequested, setCameraRequested] = useState(false);
 
   useEffect(() => {
+    if (!cameraRequested) return;
     let cancelled = false;
 
     async function startCamera() {
@@ -63,11 +65,15 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
       cancelled = true;
       stopStream();
     };
-  }, [facingMode]);
+  }, [cameraRequested, facingMode]);
 
   function stopStream() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+  }
+
+  function requestCamera() {
+    setCameraRequested(true);
   }
 
   async function capture() {
@@ -158,8 +164,16 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
             <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#1f1b16,#74604a_45%,#d4af7a)] px-8 text-center">
               <div>
                 <Camera className="mx-auto h-12 w-12 text-white/75" />
-                <p className="mt-5 text-lg font-semibold">Camera unavailable</p>
-                <p className="mt-2 text-sm leading-6 text-white/65">Allow camera permission or upload an image from this device.</p>
+                <p className="mt-5 text-lg font-semibold">{cameraRequested ? "Camera unavailable" : "Ready to take photos"}</p>
+                <p className="mt-2 text-sm leading-6 text-white/65">
+                  {cameraRequested ? "Allow camera permission or upload an image from this device." : "Tap Start Camera and allow permission when your browser asks."}
+                </p>
+                {!cameraRequested ? (
+                  <Button className="mt-5" variant="secondary" onClick={requestCamera}>
+                    <Camera className="h-4 w-4" />
+                    Start Camera
+                  </Button>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -187,7 +201,10 @@ export function CameraCapture({ slug, eventName, guestName, initialShotsRemainin
               size="icon"
               aria-label="Switch camera"
               disabled={busy}
-              onClick={() => setFacingMode((mode) => (mode === "environment" ? "user" : "environment"))}
+              onClick={() => {
+                setCameraRequested(true);
+                setFacingMode((mode) => (mode === "environment" ? "user" : "environment"));
+              }}
             >
               <RotateCcw className="h-5 w-5" />
             </Button>

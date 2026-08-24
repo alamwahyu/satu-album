@@ -22,6 +22,27 @@ export interface StorageProvider {
   createUploadUrl?(input: PresignInput): Promise<{ url: string; key: string; headers?: Record<string, string> }>;
 }
 
+export function validateProductionStorageConfig() {
+  if (process.env.VERCEL && process.env.STORAGE_PROVIDER !== "s3") {
+    return {
+      ok: false,
+      message: "Photo storage is not configured for production. Set STORAGE_PROVIDER=s3 and configure S3/R2 environment variables in Vercel."
+    };
+  }
+
+  if (process.env.STORAGE_PROVIDER === "s3") {
+    const missing = ["S3_BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY"].filter((key) => !process.env[key]);
+    if (missing.length > 0) {
+      return {
+        ok: false,
+        message: `S3 storage is missing environment variables: ${missing.join(", ")}.`
+      };
+    }
+  }
+
+  return { ok: true, message: "" };
+}
+
 class LocalStorageProvider implements StorageProvider {
   private root = process.env.LOCAL_STORAGE_ROOT ?? "./uploads";
   private publicUrl = process.env.LOCAL_STORAGE_PUBLIC_URL ?? "/uploads";
