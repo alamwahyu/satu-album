@@ -39,6 +39,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ id
     thumbnailUrl: storageClient.getPublicUrl(photo.thumbnailObjectKey ?? photo.processedObjectKey),
     processedUrl: storageClient.getPublicUrl(photo.processedObjectKey),
     status: photo.status,
+    purgedAt: photo.purgedAt,
     isFavorite: photo.isFavorite,
     capturedAt: photo.capturedAt,
     guest: { id: photo.guest.id, name: photo.guest.name },

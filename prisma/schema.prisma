@@ -193,6 +193,7 @@ model Photo {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   deletedAt  DateTime?
+  purgedAt   DateTime?
 
   @@index([eventId])
   @@index([guestId])

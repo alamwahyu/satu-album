@@ -1,6 +1,6 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import path from "path";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export type StoragePutInput = {
@@ -18,6 +18,7 @@ export type PresignInput = {
 export interface StorageProvider {
   put(input: StoragePutInput): Promise<{ key: string; url: string }>;
   get(key: string): Promise<Buffer>;
+  delete(key: string): Promise<void>;
   getPublicUrl(key: string): string;
   createUploadUrl?(input: PresignInput): Promise<{ url: string; key: string; headers?: Record<string, string> }>;
 }
@@ -70,6 +71,13 @@ class LocalStorageProvider implements StorageProvider {
     return readFile(filePath);
   }
 
+  async delete(key: string) {
+    const filePath = this.resolveKey(key);
+    await unlink(filePath).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+    });
+  }
+
   getPublicUrl(key: string) {
     return `${this.publicUrl}/${key}`;
   }
@@ -111,6 +119,15 @@ class S3StorageProvider implements StorageProvider {
     if (!response.Body) throw new Error("Object not found.");
     const bytes = await response.Body.transformToByteArray();
     return Buffer.from(bytes);
+  }
+
+  async delete(key: string) {
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key
+      })
+    );
   }
 
   async createUploadUrl(input: PresignInput) {

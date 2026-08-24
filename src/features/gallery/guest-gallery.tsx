@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, X } from "lucide-react";
+import { Download, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export type GalleryPhoto = {
   id: string;
@@ -18,11 +19,72 @@ export type GalleryPhoto = {
 
 export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
   const [selected, setSelected] = useState<GalleryPhoto | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const normalizedGuestName = guestName.trim().toLowerCase();
+  const guestNames = Array.from(new Set(photos.map((photo) => photo.capturedBy))).sort((a, b) => a.localeCompare(b));
+  const filteredPhotos = normalizedGuestName
+    ? photos.filter((photo) => photo.capturedBy.toLowerCase().includes(normalizedGuestName))
+    : photos;
 
   return (
     <>
+      <div className="mb-6 space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <Input
+            value={guestName}
+            onChange={(event) => setGuestName(event.target.value)}
+            placeholder="Filter by guest name"
+            className="pr-10 pl-9"
+          />
+          {guestName ? (
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 transition hover:text-stone-950"
+              onClick={() => setGuestName("")}
+              aria-label="Clear guest name filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+
+        {guestNames.length > 0 ? (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+                !guestName ? "border-stone-950 bg-stone-950 text-white" : "border-stone-200 bg-white text-stone-600"
+              }`}
+              onClick={() => setGuestName("")}
+            >
+              All
+            </button>
+            {guestNames.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+                  guestName === name ? "border-stone-950 bg-stone-950 text-white" : "border-stone-200 bg-white text-stone-600"
+                }`}
+                onClick={() => setGuestName(name)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <p className="text-sm text-stone-500">
+          Showing {filteredPhotos.length} of {photos.length} photos
+        </p>
+      </div>
+
+      {filteredPhotos.length === 0 ? (
+        <div className="rounded-lg bg-stone-50 p-8 text-center text-stone-600">No photos found for this guest name.</div>
+      ) : (
       <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">
-        {photos.map((photo) => (
+        {filteredPhotos.map((photo) => (
           <button
             key={photo.id}
             className="mb-3 block w-full overflow-hidden rounded-lg bg-stone-100 text-left shadow-sm transition hover:opacity-90"
@@ -32,6 +94,7 @@ export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
           </button>
         ))}
       </div>
+      )}
 
       {selected ? (
         <div className="fixed inset-0 z-50 grid bg-black/88 p-4 text-white backdrop-blur-sm md:place-items-center">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Eye, EyeOff, Heart, RotateCcw, Trash2 } from "lucide-react";
+import { Download, Eye, EyeOff, Heart, ImageOff, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ export type HostPhoto = {
   thumbnailUrl: string;
   processedUrl: string;
   status: "ACTIVE" | "HIDDEN" | "DELETED";
+  purgedAt: Date | string | null;
   isFavorite: boolean;
   capturedAt: Date | string;
   guest: { id: string; name: string };
@@ -40,6 +41,15 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
     setBusyId(null);
   }
 
+  async function deletePhoto(photoId: string, permanent = false) {
+    if (permanent && !window.confirm("Permanently delete this photo file from storage? This cannot be restored.")) return;
+
+    setBusyId(photoId);
+    await fetch(`/api/photos/${photoId}${permanent ? "?permanent=true" : ""}`, { method: "DELETE" });
+    router.refresh();
+    setBusyId(null);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -62,7 +72,13 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visiblePhotos.map((photo) => (
             <div key={photo.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
-              <img src={photo.thumbnailUrl} alt={`Captured by ${photo.guest.name}`} className="aspect-square w-full bg-stone-100 object-cover" />
+              {photo.purgedAt ? (
+                <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-stone-400">
+                  <ImageOff className="h-8 w-8" />
+                </div>
+              ) : (
+                <img src={photo.thumbnailUrl} alt={`Captured by ${photo.guest.name}`} className="aspect-square w-full bg-stone-100 object-cover" />
+              )}
               <div className="space-y-3 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -73,7 +89,7 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
                   {photo.isFavorite ? <Heart className="h-5 w-5 fill-red-500 text-red-500" /> : null}
                 </div>
 
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-6 gap-2">
                   <Button
                     variant="secondary"
                     size="icon"
@@ -92,24 +108,33 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
                   >
                     {photo.status === "HIDDEN" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
-                  <Button asChild variant="secondary" size="icon" aria-label="Open photo">
-                    <a href={photo.processedUrl} target="_blank" rel="noreferrer">
+                  <Button asChild variant="secondary" size="icon" aria-label="Open photo" disabled={Boolean(photo.purgedAt)}>
+                    <a href={photo.purgedAt ? undefined : photo.processedUrl} target="_blank" rel="noreferrer">
                       <RotateCcw className="h-4 w-4" />
                     </a>
                   </Button>
-                  <Button asChild variant="secondary" size="icon" aria-label="Download photo">
-                    <a href={photo.processedUrl} download>
+                  <Button asChild variant="secondary" size="icon" aria-label="Download photo" disabled={Boolean(photo.purgedAt)}>
+                    <a href={photo.purgedAt ? undefined : photo.processedUrl} download>
                       <Download className="h-4 w-4" />
                     </a>
                   </Button>
                   <Button
-                    variant={photo.status === "DELETED" ? "secondary" : "destructive"}
+                    variant="secondary"
                     size="icon"
-                    disabled={busyId === photo.id}
-                    aria-label={photo.status === "DELETED" ? "Restore deleted photo" : "Delete photo"}
-                    onClick={() => (photo.status === "DELETED" ? updatePhoto(photo.id, { status: "ACTIVE" }) : updatePhoto(photo.id, {}, "DELETE"))}
+                    disabled={busyId === photo.id || Boolean(photo.purgedAt)}
+                    aria-label={photo.status === "DELETED" ? "Restore soft deleted photo" : "Soft delete photo"}
+                    onClick={() => (photo.status === "DELETED" ? updatePhoto(photo.id, { status: "ACTIVE" }) : deletePhoto(photo.id))}
                   >
                     {photo.status === "DELETED" ? <Eye className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    disabled={busyId === photo.id || Boolean(photo.purgedAt)}
+                    aria-label="Permanently delete photo"
+                    onClick={() => deletePhoto(photo.id, true)}
+                  >
+                    <ImageOff className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

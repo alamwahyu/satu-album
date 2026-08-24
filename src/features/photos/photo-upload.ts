@@ -143,6 +143,7 @@ export async function uploadGuestPhoto(slug: string, formData: FormData): Promis
       }
     };
   } catch (error) {
+    await Promise.all([processedObjectKey, thumbnailObjectKey].map((key) => storage.delete(key).catch(() => undefined)));
     await prisma.$transaction([
       prisma.photo.update({ where: { id: photoId }, data: { status: "DELETED", deletedAt: new Date() } }),
       prisma.guest.update({ where: { id: session.guestId }, data: { photoCount: { decrement: 1 } } }),
