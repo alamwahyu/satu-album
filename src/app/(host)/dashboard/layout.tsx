@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-stone-950">
             <Camera className="h-5 w-5" />
-            Luma Album
+            AWH Album
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
             <Button asChild variant="ghost">

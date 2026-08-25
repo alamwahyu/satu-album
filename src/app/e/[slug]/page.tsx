@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { formatDate } from "@/lib/utils";
 import { JoinAlbumForm } from "@/features/guests/join-album-form";
 import { getGuestSession } from "@/features/guests/session";
+import { storageProvider } from "@/lib/storage/storage";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -24,6 +25,8 @@ export default async function GuestEventPage({ params }: PageProps) {
 
   const session = await getGuestSession(event.id);
   const isFull = event.guestLimit !== null && event._count.guests >= event.guestLimit && !session;
+  const storage = storageProvider();
+  const coverUrl = event.coverObjectKey ? storage.getPublicUrl(event.coverObjectKey) : null;
 
   return (
     <main className="min-h-dvh bg-stone-950 text-white">
@@ -31,14 +34,20 @@ export default async function GuestEventPage({ params }: PageProps) {
         <div className="flex min-h-[52dvh] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/10 bg-[#2b241d] p-6 shadow-2xl lg:min-h-[86dvh]">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-sm font-semibold text-white/75">
-              Luma Album
+              AWH Album
             </Link>
             <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/75">
               Private guest link
             </div>
           </div>
 
-          <div className="my-10 aspect-[4/3] rounded-[1.5rem] bg-[linear-gradient(135deg,#17120f,#6d5a43_45%,#dab67d)] shadow-inner" />
+          {coverUrl ? (
+            <div className="my-10 overflow-hidden rounded-[1.5rem] shadow-inner">
+              <img src={coverUrl} alt={`${event.name} cover`} className="aspect-[4/3] w-full object-cover" />
+            </div>
+          ) : (
+            <div className="my-10 aspect-[4/3] rounded-[1.5rem] bg-[linear-gradient(135deg,#17120f,#6d5a43_45%,#dab67d)] shadow-inner" />
+          )}
 
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2 text-sm text-white/70">

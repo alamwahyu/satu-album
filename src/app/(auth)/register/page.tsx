@@ -6,7 +6,7 @@ export default function RegisterPage() {
     <main className="mx-auto grid min-h-dvh max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-2">
       <div className="space-y-5">
         <Link href="/" className="text-sm font-semibold text-stone-700">
-          Luma Album
+          AWH Album
         </Link>
         <h1 className="text-4xl font-semibold tracking-normal text-stone-950 md:text-6xl">Create your first event album</h1>
         <p className="max-w-xl text-lg leading-8 text-stone-600">

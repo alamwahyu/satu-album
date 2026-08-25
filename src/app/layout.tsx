@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Luma Album",
+  title: "AWH Album",
   description: "Disposable camera and shared event album for private celebrations."
 };
 

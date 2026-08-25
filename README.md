@@ -1,6 +1,6 @@
-# Luma Album
+# AWH Album
 
-Luma Album is an original disposable camera and shared event album web application. Hosts create private events, generate guest links or QR codes, and guests later capture browser photos without installing an app.
+AWH Album is an original disposable camera and shared event album web application. Hosts create private events, generate guest links or QR codes, and guests later capture browser photos without installing an app.
 
 This repository is intentionally not a clone of Satualbum or any other service. Source code, naming, UI, copy, and architecture are original.
 

@@ -19,7 +19,7 @@ export default function HomePage() {
           </div>
           <div className="space-y-5">
             <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal text-stone-950 md:text-7xl">
-              Luma Album
+              AWH Album
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-stone-600">
               Host creates an event, shares a QR code, guests take photos in the browser, and the album reveals when the moment is ready.

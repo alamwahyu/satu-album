@@ -5,6 +5,7 @@ import { requireHost } from "@/lib/auth/session";
 import { handleApiError, jsonError } from "@/lib/http/api";
 import { createEventSchema } from "@/lib/validation/event";
 import { computeEventStatus } from "@/features/events/status";
+import { storageProvider } from "@/lib/storage/storage";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -55,6 +56,7 @@ export async function PATCH(request: Request, { params }: Params) {
         endAt: has("eventDate") && input.eventDate ? combineDateTime(input.eventDate, input.endTime) : undefined,
         timezone: has("timezone") ? input.timezone : undefined,
         venueName: input.venueName,
+        coverObjectKey: has("coverObjectKey") ? input.coverObjectKey || null : undefined,
         description: input.description,
         guestLimit: input.guestLimit,
         photoLimit: has("photoLimit") ? input.photoLimit : undefined,
@@ -69,6 +71,10 @@ export async function PATCH(request: Request, { params }: Params) {
         passwordHash: input.eventPassword ? await bcrypt.hash(input.eventPassword, 12) : undefined
       }
     });
+
+    if (has("coverObjectKey") && existing.coverObjectKey && input.coverObjectKey && existing.coverObjectKey !== input.coverObjectKey) {
+      await storageProvider().delete(existing.coverObjectKey).catch(() => undefined);
+    }
 
     return NextResponse.json({ event });
   } catch (error) {

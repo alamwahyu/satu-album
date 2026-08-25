@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db/prisma";
 import { getSessionUser } from "@/lib/auth/session";
 import { CreateEventForm } from "@/features/events/create-event-form";
+import { storageProvider } from "@/lib/storage/storage";
 
 function dateInput(value: Date) {
   return value.toISOString().slice(0, 10);
@@ -31,6 +32,7 @@ export default async function EventSettingsPage({ params }: { params: Promise<{ 
   ]);
 
   if (!event) notFound();
+  const storage = storageProvider();
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -55,6 +57,8 @@ export default async function EventSettingsPage({ params }: { params: Promise<{ 
           endTime: timeInput(event.endAt),
           timezone: event.timezone,
           venueName: event.venueName,
+          coverObjectKey: event.coverObjectKey,
+          coverUrl: event.coverObjectKey ? storage.getPublicUrl(event.coverObjectKey) : null,
           description: event.description,
           guestLimit: event.guestLimit,
           photoLimit: event.photoLimit,

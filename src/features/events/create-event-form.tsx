@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ type EventFormInitial = {
   endTime?: string;
   timezone: string;
   venueName?: string | null;
+  coverObjectKey?: string | null;
+  coverUrl?: string | null;
   description?: string | null;
   guestLimit?: number | null;
   photoLimit: number;
@@ -36,6 +38,9 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverObjectKey, setCoverObjectKey] = useState(initialEvent?.coverObjectKey ?? "");
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(initialEvent?.coverUrl ?? "");
   const isEdit = Boolean(initialEvent);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -43,6 +48,29 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
     setLoading(true);
     setError("");
     const form = new FormData(event.currentTarget);
+    let uploadedCoverObjectKey = coverObjectKey;
+
+    if (coverFile) {
+      const coverForm = new FormData();
+      coverForm.append("cover", coverFile);
+      const coverResponse = await fetch("/api/events/cover", {
+        method: "POST",
+        body: coverForm
+      });
+
+      if (!coverResponse.ok) {
+        const data = await coverResponse.json().catch(() => null);
+        setError(data?.error?.message ?? "Unable to upload cover photo.");
+        setLoading(false);
+        return;
+      }
+
+      const data = await coverResponse.json();
+      uploadedCoverObjectKey = data.objectKey;
+      setCoverObjectKey(data.objectKey);
+      setCoverPreviewUrl(data.url);
+    }
+
     const payload = {
       name: form.get("name"),
       type: form.get("type"),
@@ -51,6 +79,7 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
       endTime: form.get("endTime") || undefined,
       timezone: form.get("timezone"),
       venueName: form.get("venueName") || undefined,
+      coverObjectKey: uploadedCoverObjectKey || undefined,
       description: form.get("description") || undefined,
       guestLimit: form.get("guestLimit") || undefined,
       photoLimit: form.get("photoLimit") || 24,
@@ -80,6 +109,12 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
 
     router.push(isEdit ? `/dashboard/events/${initialEvent?.id}` : "/dashboard");
     router.refresh();
+  }
+
+  function onCoverChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setCoverFile(file);
+    if (file) setCoverPreviewUrl(URL.createObjectURL(file));
   }
 
   return (
@@ -115,6 +150,21 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
               </select>
             </div>
             <Field label="Event Password" name="eventPassword" type="password" placeholder={isEdit ? "Leave blank to keep current password" : "Optional"} />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="coverPhoto">Cover Photo</Label>
+            {coverPreviewUrl ? (
+              <div className="overflow-hidden rounded-xl border border-stone-200 bg-stone-100">
+                <img src={coverPreviewUrl} alt="Event cover preview" className="aspect-[4/3] w-full object-cover" />
+              </div>
+            ) : (
+              <div className="grid aspect-[4/3] place-items-center rounded-xl border border-dashed border-stone-300 bg-stone-50 text-sm text-stone-500">
+                No cover selected
+              </div>
+            )}
+            <Input id="coverPhoto" name="coverPhoto" type="file" accept="image/jpeg,image/png,image/webp" onChange={onCoverChange} />
+            <p className="text-xs text-stone-500">JPEG, PNG, or WebP. Max 10 MB.</p>
           </div>
 
           <div className="space-y-2">
