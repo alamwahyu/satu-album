@@ -71,6 +71,14 @@ LOCAL_STORAGE_ROOT=./uploads
 LOCAL_STORAGE_PUBLIC_URL=/uploads
 ```
 
+For subpath deployment, for example `https://awhdigital.my.id/satu-album`, set:
+
+```env
+NEXT_PUBLIC_APP_URL=https://awhdigital.my.id
+NEXT_PUBLIC_BASE_PATH=/satu-album
+LOCAL_STORAGE_PUBLIC_URL=/satu-album/uploads
+```
+
 For S3-compatible storage, set:
 
 ```env

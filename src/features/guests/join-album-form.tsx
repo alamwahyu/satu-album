@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { appPath } from "@/lib/app-path";
 import { Label } from "@/components/ui/label";
 
 function ensureDeviceId() {
@@ -42,7 +43,7 @@ export function JoinAlbumForm({
     setError("");
 
     const form = new FormData(event.currentTarget);
-    const response = await fetch(`/api/guest/events/${slug}/join`, {
+    const response = await fetch(appPath(`/api/guest/events/${slug}/join`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

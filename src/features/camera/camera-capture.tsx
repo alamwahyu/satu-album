@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Camera, ImageUp, Images, Loader2, Palette, RectangleHorizontal, RectangleVertical, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { appPath } from "@/lib/app-path";
 
 type CameraCaptureProps = {
   slug: string;
@@ -139,7 +140,7 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
     formData.append("photo", blob, "capture.jpg");
     formData.append("capturedAt", new Date().toISOString());
 
-    const response = await fetch(`/api/guest/events/${slug}/photos`, {
+    const response = await fetch(appPath(`/api/guest/events/${slug}/photos`), {
       method: "POST",
       body: formData
     });

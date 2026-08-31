@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { appPath } from "@/lib/app-path";
 
 type Preset = { id: string; name: string };
 type EventFormInitial = {
@@ -53,7 +54,7 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
     if (coverFile) {
       const coverForm = new FormData();
       coverForm.append("cover", coverFile);
-      const coverResponse = await fetch("/api/events/cover", {
+      const coverResponse = await fetch(appPath("/api/events/cover"), {
         method: "POST",
         body: coverForm
       });
@@ -94,7 +95,7 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
       qrTemplate: form.get("qrTemplate")
     };
 
-    const response = await fetch(isEdit ? `/api/events/${initialEvent?.id}` : "/api/events", {
+    const response = await fetch(appPath(isEdit ? `/api/events/${initialEvent?.id}` : "/api/events"), {
       method: isEdit ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

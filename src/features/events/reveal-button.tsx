@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { appPath } from "@/lib/app-path";
 
 export function RevealButton({ eventId, disabled }: { eventId: string; disabled?: boolean }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function RevealButton({ eventId, disabled }: { eventId: string; disabled?
   async function reveal() {
     setLoading(true);
     setError("");
-    const response = await fetch(`/api/events/${eventId}/reveal`, { method: "POST" });
+    const response = await fetch(appPath(`/api/events/${eventId}/reveal`), { method: "POST" });
     if (!response.ok) {
       const data = await response.json().catch(() => null);
       setError(data?.error?.message ?? "Unable to reveal album.");

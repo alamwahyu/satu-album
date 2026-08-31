@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Download, Eye, EyeOff, Heart, ImageOff, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { appPath } from "@/lib/app-path";
 
 export type HostPhoto = {
   id: string;
@@ -32,7 +33,7 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
 
   async function updatePhoto(photoId: string, payload: Record<string, unknown>, method = "PATCH") {
     setBusyId(photoId);
-    await fetch(`/api/photos/${photoId}`, {
+    await fetch(appPath(`/api/photos/${photoId}`), {
       method,
       headers: method === "PATCH" ? { "Content-Type": "application/json" } : undefined,
       body: method === "PATCH" ? JSON.stringify(payload) : undefined
@@ -45,7 +46,7 @@ export function HostPhotoManager({ photos }: { photos: HostPhoto[] }) {
     if (permanent && !window.confirm("Permanently delete this photo file from storage? This cannot be restored.")) return;
 
     setBusyId(photoId);
-    await fetch(`/api/photos/${photoId}${permanent ? "?permanent=true" : ""}`, { method: "DELETE" });
+    await fetch(appPath(`/api/photos/${photoId}${permanent ? "?permanent=true" : ""}`), { method: "DELETE" });
     router.refresh();
     setBusyId(null);
   }

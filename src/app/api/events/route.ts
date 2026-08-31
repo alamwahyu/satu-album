@@ -6,6 +6,7 @@ import { handleApiError, jsonError } from "@/lib/http/api";
 import { createEventSchema } from "@/lib/validation/event";
 import { createEventSlug, createGuestToken } from "@/features/events/slug";
 import { computeEventStatus } from "@/features/events/status";
+import { appUrl } from "@/lib/app-path";
 
 function combineDateTime(date: string, time?: string) {
   if (!time) return null;
@@ -29,7 +30,7 @@ export async function GET() {
     const normalized = events.map((event) => ({
       ...event,
       computedStatus: computeEventStatus(event),
-      guestUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/e/${event.slug}`
+      guestUrl: appUrl(`/e/${event.slug}`)
     }));
 
     return NextResponse.json({ events: normalized });
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
       include: { _count: { select: { guests: true, photos: true } } }
     });
 
-    return NextResponse.json({ event, guestUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/e/${event.slug}` }, { status: 201 });
+    return NextResponse.json({ event, guestUrl: appUrl(`/e/${event.slug}`) }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

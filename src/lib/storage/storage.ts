@@ -2,6 +2,7 @@ import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { appPath } from "@/lib/app-path";
 
 export type StoragePutInput = {
   key: string;
@@ -79,7 +80,8 @@ class LocalStorageProvider implements StorageProvider {
   }
 
   getPublicUrl(key: string) {
-    return `${this.publicUrl}/${key}`;
+    const publicUrl = this.publicUrl.startsWith("/") ? appPath(this.publicUrl) : this.publicUrl;
+    return `${publicUrl.replace(/\/$/, "")}/${key}`;
   }
 }
 

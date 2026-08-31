@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { appPath } from "@/lib/app-path";
 
 export function LogoutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
       size={compact ? "icon" : "default"}
       aria-label="Logout"
       onClick={async () => {
-        await fetch("/api/auth/logout", { method: "POST" });
+        await fetch(appPath("/api/auth/logout"), { method: "POST" });
         router.push("/login");
         router.refresh();
       }}

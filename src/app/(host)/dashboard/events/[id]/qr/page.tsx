@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db/prisma";
 import { getSessionUser } from "@/lib/auth/session";
 import { QrActions } from "@/features/events/qr-actions";
+import { appUrl } from "@/lib/app-path";
 
 export default async function EventQrPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
@@ -18,7 +19,7 @@ export default async function EventQrPage({ params }: { params: Promise<{ id: st
   });
   if (!event) notFound();
 
-  const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/e/${event.slug}`;
+  const guestUrl = appUrl(`/e/${event.slug}`);
   const svg = await QRCode.toString(guestUrl, {
     type: "svg",
     width: 900,

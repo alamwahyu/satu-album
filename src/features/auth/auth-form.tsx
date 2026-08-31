@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { appPath } from "@/lib/app-path";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -25,7 +26,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         ? { name: form.get("name"), email: form.get("email"), password: form.get("password") }
         : { email: form.get("email"), password: form.get("password") };
 
-    const response = await fetch(`/api/auth/${mode}`, {
+    const response = await fetch(appPath(`/api/auth/${mode}`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

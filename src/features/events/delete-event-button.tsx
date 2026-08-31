@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { appPath } from "@/lib/app-path";
 
 export function DeleteEventButton({ eventId, eventName }: { eventId: string; eventName: string }) {
   const router = useRouter();
@@ -16,7 +17,7 @@ export function DeleteEventButton({ eventId, eventName }: { eventId: string; eve
 
     setLoading(true);
     setError("");
-    const response = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+    const response = await fetch(appPath(`/api/events/${eventId}`), { method: "DELETE" });
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);

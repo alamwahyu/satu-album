@@ -8,6 +8,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { computeEventStatus } from "@/features/events/status";
 import { formatBytes, formatDate } from "@/lib/utils";
 import { storageProvider } from "@/lib/storage/storage";
+import { appPath, appUrl } from "@/lib/app-path";
 import { RevealButton } from "@/features/events/reveal-button";
 import { HostPhotoManager, type HostPhoto } from "@/features/events/host-photo-manager";
 import { EventAnalyticsPanel, type EventAnalytics } from "@/features/events/event-analytics-panel";
@@ -32,7 +33,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ id
 
   const status = computeEventStatus(event);
   const storage = event.photos.filter((photo) => photo.status !== "DELETED").reduce((sum, photo) => sum + (photo.fileSize ?? 0), 0);
-  const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/e/${event.slug}`;
+  const guestUrl = appUrl(`/e/${event.slug}`);
   const storageClient = storageProvider();
   const hostPhotos: HostPhoto[] = event.photos.map((photo) => ({
     id: photo.id,
@@ -67,7 +68,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ id
             <Link href={`/dashboard/events/${event.id}/qr`}>QR Code</Link>
           </Button>
           <Button asChild>
-            <a href={`/api/events/${event.id}/download?byGuest=true`}>
+            <a href={appPath(`/api/events/${event.id}/download?byGuest=true`)}>
               <Download className="h-4 w-4" />
               Download ZIP
             </a>
