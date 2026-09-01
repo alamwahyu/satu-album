@@ -11,6 +11,9 @@ type CameraCaptureProps = {
   eventName: string;
   eventDate: string;
   guestName: string;
+  themeBackgroundColor: string;
+  themeSurfaceColor: string;
+  themeAccentColor: string;
   initialShotsRemaining: number;
   photoLimit: number;
 };
@@ -26,7 +29,17 @@ const frameOptions: { value: CameraFrame; label: string }[] = [
   { value: "dark", label: "Dark" }
 ];
 
-export function CameraCapture({ slug, eventName, eventDate, guestName, initialShotsRemaining, photoLimit }: CameraCaptureProps) {
+export function CameraCapture({
+  slug,
+  eventName,
+  eventDate,
+  guestName,
+  themeBackgroundColor,
+  themeSurfaceColor,
+  themeAccentColor,
+  initialShotsRemaining,
+  photoLimit
+}: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -38,7 +51,7 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraRequested, setCameraRequested] = useState(false);
   const [orientation, setOrientation] = useState<CameraOrientation>("portrait");
-  const [frame, setFrame] = useState<CameraFrame>("classic");
+  const [frame, setFrame] = useState<CameraFrame>("none");
   const eventDateLabel = formatEventDate(eventDate);
 
   useEffect(() => {
@@ -162,31 +175,34 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
   const limitReached = shotsRemaining <= 0;
 
   return (
-    <main className="min-h-dvh bg-[#14110e] text-white">
-      <section className="mx-auto flex min-h-dvh max-w-md flex-col px-4 py-4">
-        <header className="flex items-center justify-between py-2">
+    <main className="min-h-dvh text-white" style={{ backgroundColor: themeBackgroundColor }}>
+      <section className="mx-auto flex min-h-dvh max-w-md flex-col px-3 py-3">
+        <header className="flex items-center justify-between py-1">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">{eventName}</p>
             <h1 className="mt-1 text-xl font-semibold">Disposable Camera</h1>
           </div>
-          <Link href={`/e/${slug}/gallery`} className="rounded-full bg-white/10 p-3" aria-label="Open gallery">
+          <Link href={`/e/${slug}/gallery`} className="rounded-full border border-white/10 p-3" style={{ backgroundColor: themeSurfaceColor }} aria-label="Open gallery">
             <Images className="h-5 w-5" />
           </Link>
         </header>
 
-        <div className="my-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+        <div className="my-3 flex items-center justify-between rounded-2xl border border-white/10 px-4 py-2.5" style={{ backgroundColor: themeSurfaceColor }}>
           <p className="text-sm text-white/65">Shots remaining</p>
           <p className="text-2xl font-semibold">
             {shotsRemaining} / {photoLimit}
           </p>
         </div>
 
-        <div className="grid flex-1 place-items-center overflow-hidden rounded-[2rem] border border-white/10 bg-black p-2 shadow-2xl">
+        <div className="grid flex-1 place-items-center overflow-hidden rounded-[2rem] border border-white/10 bg-black p-1.5 shadow-2xl">
           <div className={`relative overflow-hidden rounded-[1.5rem] bg-black ${orientation === "portrait" ? "aspect-[3/4] h-full max-h-full max-w-full" : "aspect-[4/3] w-full max-h-full"}`}>
             <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
             <FrameOverlay frame={frame} eventName={eventName} eventDateLabel={eventDateLabel} />
             {!cameraReady ? (
-              <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#1f1b16,#74604a_45%,#d4af7a)] px-8 text-center">
+              <div
+                className="absolute inset-0 grid place-items-center px-8 text-center"
+                style={{ background: `linear-gradient(135deg, ${themeBackgroundColor}, ${themeSurfaceColor} 48%, ${themeAccentColor})` }}
+              >
                 <div>
                   <Camera className="mx-auto h-12 w-12 text-white/75" />
                   <p className="mt-5 text-lg font-semibold">{cameraRequested ? "Camera unavailable" : "Ready to take photos"}</p>
@@ -216,12 +232,12 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
           </div>
         </div>
 
-        <footer className="grid gap-4 py-5">
+        <footer className="grid gap-3 py-3">
           {error ? <p className="rounded-lg bg-red-500/15 px-3 py-2 text-center text-sm text-red-100">{error}</p> : null}
           {status === "saved" ? <p className="rounded-lg bg-emerald-500/15 px-3 py-2 text-center text-sm text-emerald-100">Saved</p> : null}
           {limitReached ? <p className="rounded-lg bg-white/10 px-3 py-2 text-center text-sm text-white/75">Photo limit reached.</p> : null}
 
-          <div className="mx-auto grid max-w-sm grid-cols-[56px_1fr_56px] items-center gap-4">
+          <div className="mx-auto grid w-full max-w-sm grid-cols-[44px_44px_1fr_44px_44px] items-center gap-3">
             <Button
               variant="secondary"
               size="icon"
@@ -234,36 +250,31 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
             >
               <RotateCcw className="h-5 w-5" />
             </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              disabled={busy}
+              onClick={() => changeOrientation(orientation === "portrait" ? "landscape" : "portrait")}
+              aria-label={orientation === "portrait" ? "Switch to landscape" : "Switch to portrait"}
+            >
+              {orientation === "portrait" ? <RectangleVertical className="h-5 w-5" /> : <RectangleHorizontal className="h-5 w-5" />}
+            </Button>
             <button
-              className="grid h-20 w-20 place-items-center rounded-full border-4 border-white/40 bg-white shadow-[0_0_0_8px_rgba(255,255,255,0.08)] disabled:opacity-50"
+              className="mx-auto grid h-20 w-20 place-items-center rounded-full border-4 border-white/40 bg-white shadow-[0_0_0_8px_rgba(255,255,255,0.08)] disabled:opacity-50"
               disabled={busy || limitReached || !cameraReady}
               aria-label="Capture photo"
               onClick={capture}
             >
-              <span className="h-14 w-14 rounded-full bg-stone-950" />
+              <span className="h-14 w-14 rounded-full" style={{ backgroundColor: themeAccentColor }} />
             </button>
-            <Button variant="secondary" size="icon" aria-label="Upload image" disabled={busy || limitReached} onClick={() => fileInputRef.current?.click()}>
-              <ImageUp className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="mx-auto grid max-w-sm grid-cols-[1fr_1fr] gap-3">
-            <Button
-              variant="secondary"
-              className="h-11"
-              disabled={busy}
-              onClick={() => changeOrientation(orientation === "portrait" ? "landscape" : "portrait")}
-              aria-label="Toggle photo orientation"
-            >
-              {orientation === "portrait" ? <RectangleVertical className="h-4 w-4" /> : <RectangleHorizontal className="h-4 w-4" />}
-              {orientation === "portrait" ? "Portrait" : "Landscape"}
-            </Button>
-            <label className="relative flex h-11 items-center rounded-lg border border-stone-200 bg-white px-3 text-sm font-semibold text-stone-950 shadow-sm">
-              <Palette className="mr-2 h-4 w-4" />
+            <label className="relative grid h-10 w-10 place-items-center rounded-lg border border-stone-200 bg-white text-stone-950 shadow-sm">
+              <Palette className="h-5 w-5" />
               <select
                 value={frame}
                 onChange={(event) => setFrame(event.target.value as CameraFrame)}
-                className="min-w-0 flex-1 appearance-none bg-transparent pr-2 outline-none"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 aria-label="Photo frame"
+                disabled={busy}
               >
                 {frameOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -272,9 +283,12 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
                 ))}
               </select>
             </label>
+            <Button variant="secondary" size="icon" aria-label="Upload image" disabled={busy || limitReached} onClick={() => fileInputRef.current?.click()}>
+              <ImageUp className="h-5 w-5" />
+            </Button>
           </div>
           <input ref={fileInputRef} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={onFileChange} />
-          <div className="flex items-center justify-center gap-2 text-center text-sm text-white/45">
+          <div className="flex items-center justify-center gap-2 text-center text-xs text-white/45">
             <Zap className="h-4 w-4" />
             Signed in as {guestName}
           </div>

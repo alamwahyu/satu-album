@@ -25,6 +25,7 @@ export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
   const filteredPhotos = normalizedGuestName
     ? photos.filter((photo) => photo.capturedBy.toLowerCase().includes(normalizedGuestName))
     : photos;
+  const selectedOrientation = selected ? getPhotoOrientation(selected) : null;
 
   return (
     <>
@@ -83,17 +84,22 @@ export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
       {filteredPhotos.length === 0 ? (
         <div className="rounded-lg bg-stone-50 p-8 text-center text-stone-600">No photos found for this guest name.</div>
       ) : (
-      <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">
-        {filteredPhotos.map((photo) => (
-          <button
-            key={photo.id}
-            className="mb-3 block w-full overflow-hidden rounded-lg bg-stone-100 text-left shadow-sm transition hover:opacity-90"
-            onClick={() => setSelected(photo)}
-          >
-            <img src={photo.thumbnailUrl} alt={`Captured by ${photo.capturedBy}`} className="h-auto w-full object-cover" loading="lazy" />
-          </button>
-        ))}
-      </div>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5">
+          {filteredPhotos.map((photo) => (
+            <button
+              key={photo.id}
+              className="group block aspect-square w-full overflow-hidden rounded-lg bg-stone-100 text-left shadow-sm transition hover:opacity-90"
+              onClick={() => setSelected(photo)}
+            >
+              <img
+                src={photo.thumbnailUrl}
+                alt={`Captured by ${photo.capturedBy}`}
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
       )}
 
       {selected ? (
@@ -104,6 +110,7 @@ export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
                 <p className="font-semibold">Captured by {selected.capturedBy}</p>
                 <p className="text-sm text-white/60">
                   {new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(selected.capturedAt))}
+                  {selectedOrientation ? ` · ${selectedOrientation}` : ""}
                   {selected.presetName ? ` · ${selected.presetName}` : ""}
                 </p>
               </div>
@@ -129,4 +136,10 @@ export function GuestGallery({ photos }: { photos: GalleryPhoto[] }) {
       ) : null}
     </>
   );
+}
+
+function getPhotoOrientation(photo: GalleryPhoto) {
+  if (!photo.width || !photo.height) return null;
+  if (photo.width === photo.height) return "Square";
+  return photo.width > photo.height ? "Landscape" : "Portrait";
 }

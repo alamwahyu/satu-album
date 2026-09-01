@@ -26,6 +26,9 @@ export default async function GuestCameraPage({ params }: PageProps) {
       eventName={event.name}
       eventDate={event.eventDate.toISOString()}
       guestName={session.guest.name}
+      themeBackgroundColor={event.themeBackgroundColor}
+      themeSurfaceColor={event.themeSurfaceColor}
+      themeAccentColor={event.themeAccentColor}
       initialShotsRemaining={shotsRemaining}
       photoLimit={event.photoLimit}
     />
