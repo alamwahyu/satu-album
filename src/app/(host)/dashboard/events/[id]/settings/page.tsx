@@ -69,7 +69,10 @@ export default async function EventSettingsPage({ params }: { params: Promise<{ 
           allowGuestGallery: event.allowGuestGallery,
           requireGuestName: event.requireGuestName,
           privacy: event.privacy,
-          qrTemplate: event.qrTemplate
+          qrTemplate: event.qrTemplate,
+          themeBackgroundColor: event.themeBackgroundColor,
+          themeSurfaceColor: event.themeSurfaceColor,
+          themeAccentColor: event.themeAccentColor
         }}
       />
     </div>

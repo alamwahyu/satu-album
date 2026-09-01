@@ -106,6 +106,9 @@ model Event {
   allowGuestGallery  Boolean @default(true)
   requireGuestName   Boolean @default(true)
   qrTemplate         String  @default("Minimal")
+  themeBackgroundColor String @default("#14110e")
+  themeSurfaceColor    String @default("#2b241d")
+  themeAccentColor     String @default("#dab67d")
 
   owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   plan        Plan?       @relation(fields: [planId], references: [id])

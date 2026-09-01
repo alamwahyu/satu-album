@@ -33,6 +33,9 @@ type EventFormInitial = {
   requireGuestName: boolean;
   privacy: string;
   qrTemplate: string;
+  themeBackgroundColor?: string;
+  themeSurfaceColor?: string;
+  themeAccentColor?: string;
 };
 
 export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; initialEvent?: EventFormInitial }) {
@@ -42,6 +45,9 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverObjectKey, setCoverObjectKey] = useState(initialEvent?.coverObjectKey ?? "");
   const [coverPreviewUrl, setCoverPreviewUrl] = useState(initialEvent?.coverUrl ?? "");
+  const [themeBackgroundColor, setThemeBackgroundColor] = useState(initialEvent?.themeBackgroundColor ?? "#14110e");
+  const [themeSurfaceColor, setThemeSurfaceColor] = useState(initialEvent?.themeSurfaceColor ?? "#2b241d");
+  const [themeAccentColor, setThemeAccentColor] = useState(initialEvent?.themeAccentColor ?? "#dab67d");
   const isEdit = Boolean(initialEvent);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -92,7 +98,10 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
       requireGuestName: form.get("requireGuestName") === "on",
       privacy: form.get("privacy"),
       eventPassword: form.get("eventPassword") || undefined,
-      qrTemplate: form.get("qrTemplate")
+      qrTemplate: form.get("qrTemplate"),
+      themeBackgroundColor: form.get("themeBackgroundColor"),
+      themeSurfaceColor: form.get("themeSurfaceColor"),
+      themeAccentColor: form.get("themeAccentColor")
     };
 
     const response = await fetch(appPath(isEdit ? `/api/events/${initialEvent?.id}` : "/api/events"), {
@@ -168,6 +177,43 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
             <p className="text-xs text-stone-500">JPEG, PNG, or WebP. Max 10 MB.</p>
           </div>
 
+          <div className="grid gap-4 rounded-xl border border-stone-200 bg-stone-50 p-4 md:grid-cols-[1fr_220px]">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <ColorField
+                label="Page Background"
+                name="themeBackgroundColor"
+                value={themeBackgroundColor}
+                onChange={setThemeBackgroundColor}
+              />
+              <ColorField
+                label="Event Panel"
+                name="themeSurfaceColor"
+                value={themeSurfaceColor}
+                onChange={setThemeSurfaceColor}
+              />
+              <ColorField
+                label="Accent"
+                name="themeAccentColor"
+                value={themeAccentColor}
+                onChange={setThemeAccentColor}
+              />
+            </div>
+            <div
+              className="overflow-hidden rounded-xl p-3 text-white shadow-inner"
+              style={{ backgroundColor: themeBackgroundColor }}
+            >
+              <div className="rounded-lg p-3" style={{ backgroundColor: themeSurfaceColor }}>
+                <div className="aspect-[4/3] rounded-lg" style={{ background: `linear-gradient(135deg, ${themeBackgroundColor}, ${themeSurfaceColor} 48%, ${themeAccentColor})` }} />
+                <div className="mt-3 flex gap-2">
+                  <span className="h-6 rounded-full px-3 text-[10px] font-semibold leading-6 text-stone-950" style={{ backgroundColor: themeAccentColor }}>
+                    Event Date
+                  </span>
+                </div>
+                <p className="mt-3 truncate text-sm font-semibold">{initialEvent?.name || "Event Name"}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">Event Description</Label>
             <Textarea id="description" name="description" placeholder="A short welcome message for guests." defaultValue={initialEvent?.description ?? undefined} />
@@ -188,6 +234,25 @@ export function CreateEventForm({ presets, initialEvent }: { presets: Preset[]; 
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+function ColorField({ label, name, value, onChange }: { label: string; name: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <input
+          id={name}
+          name={name}
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-11 w-12 rounded-lg border border-stone-200 bg-white p-1"
+        />
+        <Input value={value} readOnly aria-label={`${label} hex color`} />
+      </div>
+    </div>
   );
 }
 

@@ -113,7 +113,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ id
               </Link>
             </Button>
             <Button asChild variant="secondary">
-              <a href={`/e/${event.slug}/gallery`} target="_blank" rel="noreferrer">
+              <a href={appPath(`/e/${event.slug}/gallery`)} target="_blank" rel="noreferrer">
                 <Images className="h-4 w-4" />
                 View Gallery
               </a>

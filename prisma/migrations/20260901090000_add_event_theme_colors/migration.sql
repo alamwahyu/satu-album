@@ -1,0 +1,3 @@
+ALTER TABLE "Event" ADD COLUMN "themeBackgroundColor" TEXT NOT NULL DEFAULT '#14110e';
+ALTER TABLE "Event" ADD COLUMN "themeSurfaceColor" TEXT NOT NULL DEFAULT '#2b241d';
+ALTER TABLE "Event" ADD COLUMN "themeAccentColor" TEXT NOT NULL DEFAULT '#dab67d';

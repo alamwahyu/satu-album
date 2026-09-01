@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { JoinAlbumForm } from "@/features/guests/join-album-form";
 import { getGuestSession } from "@/features/guests/session";
 import { storageProvider } from "@/lib/storage/storage";
+import { appPath } from "@/lib/app-path";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -27,16 +28,21 @@ export default async function GuestEventPage({ params }: PageProps) {
   const isFull = event.guestLimit !== null && event._count.guests >= event.guestLimit && !session;
   const storage = storageProvider();
   const coverUrl = event.coverObjectKey ? storage.getPublicUrl(event.coverObjectKey) : null;
+  const theme = {
+    background: event.themeBackgroundColor,
+    surface: event.themeSurfaceColor,
+    accent: event.themeAccentColor
+  };
 
   return (
-    <main className="min-h-dvh bg-stone-950 text-white">
+    <main className="min-h-dvh text-white" style={{ backgroundColor: theme.background }}>
       <section className="mx-auto grid min-h-dvh max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1fr_440px] lg:items-center">
-        <div className="flex min-h-[52dvh] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/10 bg-[#2b241d] p-6 shadow-2xl lg:min-h-[86dvh]">
+        <div className="flex min-h-[52dvh] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/10 p-6 shadow-2xl lg:min-h-[86dvh]" style={{ backgroundColor: theme.surface }}>
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-sm font-semibold text-white/75">
+            <Link href={appPath("/")} className="text-sm font-semibold text-white/75">
               AWH Album
             </Link>
-            <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/75">
+            <div className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-stone-950" style={{ backgroundColor: theme.accent }}>
               Private guest link
             </div>
           </div>
@@ -46,17 +52,17 @@ export default async function GuestEventPage({ params }: PageProps) {
               <img src={coverUrl} alt={`${event.name} cover`} className="aspect-[4/3] w-full object-cover" />
             </div>
           ) : (
-            <div className="my-10 aspect-[4/3] rounded-[1.5rem] bg-[linear-gradient(135deg,#17120f,#6d5a43_45%,#dab67d)] shadow-inner" />
+            <div className="my-10 aspect-[4/3] rounded-[1.5rem] shadow-inner" style={{ background: `linear-gradient(135deg, ${theme.background}, ${theme.surface} 45%, ${theme.accent})` }} />
           )}
 
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2 text-sm text-white/70">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
+              <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-stone-950" style={{ backgroundColor: theme.accent }}>
                 <CalendarDays className="h-4 w-4" />
                 {formatDate(event.eventDate)}
               </span>
               {event.venueName ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-white/80">
                   <MapPin className="h-4 w-4" />
                   {event.venueName}
                 </span>
@@ -91,8 +97,9 @@ export default async function GuestEventPage({ params }: PageProps) {
                 </p>
               </div>
               <Link
-                href={`/e/${event.slug}/camera`}
-                className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-stone-950 px-5 text-base font-semibold text-white transition hover:bg-stone-800"
+                href={appPath(`/e/${event.slug}/camera`)}
+                className="inline-flex h-12 w-full items-center justify-center rounded-lg px-5 text-base font-semibold text-stone-950 transition hover:opacity-90"
+                style={{ backgroundColor: theme.accent }}
               >
                 Open Camera
               </Link>

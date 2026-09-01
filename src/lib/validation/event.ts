@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
 export const createEventSchema = z.object({
   name: z.string().min(2).max(120),
   type: z.enum(["WEDDING", "ENGAGEMENT", "BIRTHDAY", "CORPORATE", "PARTY", "REUNION", "OTHER"]),
@@ -20,7 +22,10 @@ export const createEventSchema = z.object({
   requireGuestName: z.coerce.boolean().default(true),
   privacy: z.enum(["PRIVATE", "PUBLIC"]).default("PRIVATE"),
   eventPassword: z.string().min(4).max(128).optional(),
-  qrTemplate: z.enum(["Minimal", "Wedding", "Dark", "Elegant", "Classic"]).default("Minimal")
+  qrTemplate: z.enum(["Minimal", "Wedding", "Dark", "Elegant", "Classic"]).default("Minimal"),
+  themeBackgroundColor: hexColorSchema.default("#14110e"),
+  themeSurfaceColor: hexColorSchema.default("#2b241d"),
+  themeAccentColor: hexColorSchema.default("#dab67d")
 });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;

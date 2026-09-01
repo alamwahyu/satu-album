@@ -86,6 +86,9 @@ export async function POST(request: Request) {
         allowGuestGallery: input.allowGuestGallery,
         requireGuestName: input.requireGuestName,
         qrTemplate: input.qrTemplate,
+        themeBackgroundColor: input.themeBackgroundColor,
+        themeSurfaceColor: input.themeSurfaceColor,
+        themeAccentColor: input.themeAccentColor,
         status: startAt && startAt > new Date() ? "UPCOMING" : "DRAFT",
         setting: { create: {} }
       },

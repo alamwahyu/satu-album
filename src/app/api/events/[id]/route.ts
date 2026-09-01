@@ -68,6 +68,9 @@ export async function PATCH(request: Request, { params }: Params) {
         requireGuestName: has("requireGuestName") ? input.requireGuestName : undefined,
         privacy: has("privacy") ? input.privacy : undefined,
         qrTemplate: has("qrTemplate") ? input.qrTemplate : undefined,
+        themeBackgroundColor: has("themeBackgroundColor") ? input.themeBackgroundColor : undefined,
+        themeSurfaceColor: has("themeSurfaceColor") ? input.themeSurfaceColor : undefined,
+        themeAccentColor: has("themeAccentColor") ? input.themeAccentColor : undefined,
         passwordHash: input.eventPassword ? await bcrypt.hash(input.eventPassword, 12) : undefined
       }
     });

@@ -169,7 +169,7 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">{eventName}</p>
             <h1 className="mt-1 text-xl font-semibold">Disposable Camera</h1>
           </div>
-          <Link href={`/e/${slug}/gallery`} className="rounded-full bg-white/10 p-3" aria-label="Open gallery">
+          <Link href={appPath(`/e/${slug}/gallery`)} className="rounded-full bg-white/10 p-3" aria-label="Open gallery">
             <Images className="h-5 w-5" />
           </Link>
         </header>
@@ -179,50 +179,6 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
           <p className="text-2xl font-semibold">
             {shotsRemaining} / {photoLimit}
           </p>
-        </div>
-
-        <div className="mb-3 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/10 p-1">
-          <button
-            type="button"
-            className={`flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
-              orientation === "portrait" ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
-            }`}
-            onClick={() => changeOrientation("portrait")}
-          >
-            <RectangleVertical className="h-4 w-4" />
-            Portrait
-          </button>
-          <button
-            type="button"
-            className={`flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
-              orientation === "landscape" ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
-            }`}
-            onClick={() => changeOrientation("landscape")}
-          >
-            <RectangleHorizontal className="h-4 w-4" />
-            Landscape
-          </button>
-        </div>
-
-        <div className="mb-3 rounded-2xl border border-white/10 bg-white/10 p-1">
-          <div className="mb-1 flex items-center gap-2 px-2 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
-            <Palette className="h-3.5 w-3.5" />
-            Frame
-          </div>
-          <div className="grid grid-cols-4 gap-1">
-            {frameOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`h-9 rounded-xl text-xs font-semibold transition ${
-                  frame === option.value ? "bg-white text-stone-950" : "text-white/65 hover:text-white"
-                }`}
-                onClick={() => setFrame(option.value)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="grid flex-1 place-items-center overflow-hidden rounded-[2rem] border border-white/10 bg-black p-2 shadow-2xl">
@@ -265,7 +221,7 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
           {status === "saved" ? <p className="rounded-lg bg-emerald-500/15 px-3 py-2 text-center text-sm text-emerald-100">Saved</p> : null}
           {limitReached ? <p className="rounded-lg bg-white/10 px-3 py-2 text-center text-sm text-white/75">Photo limit reached.</p> : null}
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="mx-auto grid max-w-sm grid-cols-[56px_1fr_56px] items-center gap-4">
             <Button
               variant="secondary"
               size="icon"
@@ -289,6 +245,33 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
             <Button variant="secondary" size="icon" aria-label="Upload image" disabled={busy || limitReached} onClick={() => fileInputRef.current?.click()}>
               <ImageUp className="h-5 w-5" />
             </Button>
+          </div>
+          <div className="mx-auto grid max-w-sm grid-cols-[1fr_1fr] gap-3">
+            <Button
+              variant="secondary"
+              className="h-11"
+              disabled={busy}
+              onClick={() => changeOrientation(orientation === "portrait" ? "landscape" : "portrait")}
+              aria-label="Toggle photo orientation"
+            >
+              {orientation === "portrait" ? <RectangleVertical className="h-4 w-4" /> : <RectangleHorizontal className="h-4 w-4" />}
+              {orientation === "portrait" ? "Portrait" : "Landscape"}
+            </Button>
+            <label className="relative flex h-11 items-center rounded-lg border border-stone-200 bg-white px-3 text-sm font-semibold text-stone-950 shadow-sm">
+              <Palette className="mr-2 h-4 w-4" />
+              <select
+                value={frame}
+                onChange={(event) => setFrame(event.target.value as CameraFrame)}
+                className="min-w-0 flex-1 appearance-none bg-transparent pr-2 outline-none"
+                aria-label="Photo frame"
+              >
+                {frameOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <input ref={fileInputRef} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={onFileChange} />
           <div className="flex items-center justify-center gap-2 text-center text-sm text-white/45">
