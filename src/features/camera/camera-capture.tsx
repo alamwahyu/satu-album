@@ -169,7 +169,7 @@ export function CameraCapture({ slug, eventName, eventDate, guestName, initialSh
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">{eventName}</p>
             <h1 className="mt-1 text-xl font-semibold">Disposable Camera</h1>
           </div>
-          <Link href={appPath(`/e/${slug}/gallery`)} className="rounded-full bg-white/10 p-3" aria-label="Open gallery">
+          <Link href={`/e/${slug}/gallery`} className="rounded-full bg-white/10 p-3" aria-label="Open gallery">
             <Images className="h-5 w-5" />
           </Link>
         </header>

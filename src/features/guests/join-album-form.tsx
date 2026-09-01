@@ -60,7 +60,7 @@ export function JoinAlbumForm({
       return;
     }
 
-    router.push(appPath(`/e/${slug}/camera`));
+    router.push(`/e/${slug}/camera`);
     router.refresh();
   }
 

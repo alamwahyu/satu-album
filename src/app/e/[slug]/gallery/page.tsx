@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db/prisma";
 import { isAlbumRevealed } from "@/features/events/status";
 import { storageProvider } from "@/lib/storage/storage";
 import { GuestGallery, type GalleryPhoto } from "@/features/gallery/guest-gallery";
-import { appPath } from "@/lib/app-path";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -46,7 +45,7 @@ export default async function GuestGalleryPage({ params }: PageProps) {
   return (
     <main className="min-h-dvh bg-[#f7f4ef] px-5 py-8">
       <section className="mx-auto max-w-5xl">
-        <Link href={appPath(`/e/${event.slug}`)} className="inline-flex items-center gap-2 text-sm font-semibold text-stone-600">
+        <Link href={`/e/${event.slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-stone-600">
           <ArrowLeft className="h-4 w-4" />
           Back to event
         </Link>
@@ -64,7 +63,7 @@ export default async function GuestGalleryPage({ params }: PageProps) {
                   <h1 className="mt-2 text-4xl font-semibold text-stone-950">Gallery</h1>
                   <p className="mt-3 text-stone-600">{photos.length} photos revealed</p>
                 </div>
-                <Link href={appPath(`/e/${event.slug}/camera`)} className="text-sm font-semibold text-stone-950">
+                <Link href={`/e/${event.slug}/camera`} className="text-sm font-semibold text-stone-950">
                   Back to camera
                 </Link>
               </div>

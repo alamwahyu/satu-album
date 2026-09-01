@@ -7,7 +7,6 @@ import { formatDate } from "@/lib/utils";
 import { JoinAlbumForm } from "@/features/guests/join-album-form";
 import { getGuestSession } from "@/features/guests/session";
 import { storageProvider } from "@/lib/storage/storage";
-import { appPath } from "@/lib/app-path";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -39,7 +38,7 @@ export default async function GuestEventPage({ params }: PageProps) {
       <section className="mx-auto grid min-h-dvh max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1fr_440px] lg:items-center">
         <div className="flex min-h-[52dvh] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/10 p-6 shadow-2xl lg:min-h-[86dvh]" style={{ backgroundColor: theme.surface }}>
           <div className="flex items-center justify-between">
-            <Link href={appPath("/")} className="text-sm font-semibold text-white/75">
+            <Link href="/" className="text-sm font-semibold text-white/75">
               AWH Album
             </Link>
             <div className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-stone-950" style={{ backgroundColor: theme.accent }}>
@@ -97,7 +96,7 @@ export default async function GuestEventPage({ params }: PageProps) {
                 </p>
               </div>
               <Link
-                href={appPath(`/e/${event.slug}/camera`)}
+                href={`/e/${event.slug}/camera`}
                 className="inline-flex h-12 w-full items-center justify-center rounded-lg px-5 text-base font-semibold text-stone-950 transition hover:opacity-90"
                 style={{ backgroundColor: theme.accent }}
               >
